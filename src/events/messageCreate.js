@@ -18,9 +18,16 @@ import {
   isValidCountingMessage,
   recordCorrectCount,
 } from '../services/countingGameService.js';
+import {
+  getGuildPersonality,
+  shouldBotRespond,
+  generateResponse,
+  detectContext,
+} from '../services/personality/personalityService.js';
 
 const MESSAGE_XP_RATE_LIMIT_ATTEMPTS = 12;
 const MESSAGE_XP_RATE_LIMIT_WINDOW_MS = 10000;
+const PERSONALITY_RESPONSE_COOLDOWN_MS = 5000; // Don't respond too frequently
 
 export default {
   name: Events.MessageCreate,
@@ -37,12 +44,51 @@ export default {
 
       await handlePrefixCommand(message, client);
 
+      // Handle personality-based conversation responses
+      await handlePersonalityResponse(message, client);
+
       await handleLeveling(message, client);
     } catch (error) {
       logger.error('Error in messageCreate event:', error);
     }
   }
 };
+
+async function handlePersonalityResponse(message, client) {
+  try {
+    // Get guild personality
+    const personality = await getGuildPersonality(client, message.guild.id);
+
+    // Check if bot should respond
+    if (!shouldBotRespond(message, personality)) {
+      return;
+    }
+
+    // Check cooldown to avoid response spam
+    const cooldownKey = `personality-response:${message.guild.id}`;
+    const canRespond = await checkRateLimit(cooldownKey, 1, PERSONALITY_RESPONSE_COOLDOWN_MS);
+    if (!canRespond) {
+      return;
+    }
+
+    // Detect context from the message
+    const context = detectContext(message.content);
+
+    // Generate a personality-based response
+    const response = generateResponse(context, personality);
+
+    if (response) {
+      await message.reply({
+        content: response,
+        allowedMentions: { repliedUser: false },
+      }).catch(error => {
+        logger.warn(`Failed to send personality response: ${error.message}`);
+      });
+    }
+  } catch (error) {
+    logger.error('Error handling personality response:', error);
+  }
+}
 
 async function handlePrefixCommand(message, client) {
   try {
@@ -251,3 +297,4 @@ async function handleLeveling(message, client) {
     logger.error('Error handling leveling for message:', error);
   }
 }
+
