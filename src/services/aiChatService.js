@@ -1,5 +1,5 @@
-import { logger } from '../../utils/logger.js';
-import { checkRateLimit } from '../../utils/rateLimiter.js';
+import { logger } from '../utils/logger.js';
+import { checkRateLimit } from '../utils/rateLimiter.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-haiku-4-5-20251001'; // fast + cheap, good enough for chat replies
