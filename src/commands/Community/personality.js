@@ -12,6 +12,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName('personality')
     .setDescription('Configure the bot\'s personality and conversational responses')
+    .setDMPermission(false) // Guild-only command
     .addSubcommand(subcommand =>
       subcommand
         .setName('set')
