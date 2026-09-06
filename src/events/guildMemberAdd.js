@@ -86,3 +86,13 @@ export default {
                 delete backup[user.id];
                 await member.client.db.set(backupKey, backup);
                 logger.debug(`Birthday restored for user ${user.id} in guild ${guild.id}`);
+      
+            }
+        } catch (error) {
+            logger.debug('Error restoring birthday on member join:', error);
+        }
+    } catch (error) {
+        logger.error(`Error in guildMemberAdd event for guild ${member?.guild?.id}:`, error);
+    }
+  },
+};
