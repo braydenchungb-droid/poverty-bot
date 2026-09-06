@@ -178,13 +178,13 @@ function getRandomResponse(responses) {
  */
 export async function getGuildPersonality(client, guildId) {
   try {
-    // Store personality in database or memory
-    // For now, return default personality
-    // You can extend this to persist to database later
-    const stored = client.guildPersonalities?.get(guildId);
-    if (stored) {
-      return stored;
+    const key = `guild:${guildId}:personality`;
+    const storedKey = await client.db.get(key, null);
+
+    if (storedKey && PERSONALITY_PRESETS[storedKey]) {
+      return PERSONALITY_PRESETS[storedKey];
     }
+
     return DEFAULT_PERSONALITY;
   } catch (error) {
     logger.error(`Error getting personality for guild ${guildId}:`, error);
@@ -202,11 +202,9 @@ export async function setGuildPersonality(client, guildId, personalityKey) {
       throw new Error(`Unknown personality: ${personalityKey}`);
     }
 
-    if (!client.guildPersonalities) {
-      client.guildPersonalities = new Map();
-    }
+    const key = `guild:${guildId}:personality`;
+    await client.db.set(key, personalityKey);
 
-    client.guildPersonalities.set(guildId, personality);
     logger.info(`Set personality for guild ${guildId} to ${personalityKey}`);
     return personality;
   } catch (error) {
