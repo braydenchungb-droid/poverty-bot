@@ -22,7 +22,7 @@ import {
   generateResponse,
   detectContext,
 } from '../services/personality/personalityService.js';
-import { generateAIReply } from '../services/ai/aiChatService.js';
+import { generateAIReply } from '../services/aiChatService.js';
 
 const PERSONALITY_RESPONSE_COOLDOWN_MS = 5000; // Don't respond too frequently
 
