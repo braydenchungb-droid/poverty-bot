@@ -1,3 +1,4 @@
+import { buildBrainrotResponse } from './brainrotResponses.js';
 import { logger } from '../../utils/logger.js';
 
 /**
