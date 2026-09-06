@@ -46,7 +46,7 @@ export default {
   category: 'Community',
   permissions: ['ManageGuild'],
 
-  async execute(interaction, client) {
+  async execute(interaction, config, client) {
     const subcommand = interaction.options.getSubcommand();
 
     try {
