@@ -23,7 +23,7 @@ const PERSONALITY_PRESETS = {
     traits: ['helpful', 'calm', 'professional'],
     responseStyle: 'neutral',
     triggerPatterns: ['@bot', 'bot', 'hey'],
-    responseChance: 0.5, // 50% chance to respond to casual mentions
+    responseChance: 0.5,
     enabled: true,
   },
   friendly: {
@@ -50,7 +50,7 @@ const PERSONALITY_PRESETS = {
     traits: ['formal', 'professional', 'thorough', 'methodical'],
     responseStyle: 'professional',
     triggerPatterns: ['@bot', 'bot'],
-    responseChance: 0.8, // More likely to respond to direct addresses
+    responseChance: 0.8,
     enabled: true,
   },
   nerdy: {
@@ -68,7 +68,7 @@ const PERSONALITY_PRESETS = {
     traits: ['chaotic', 'brainrotted', 'sarcastic', 'ruthless', 'funny', 'unfiltered'],
     responseStyle: 'brainrot',
     triggerPatterns: ['@bot', 'bot', 'hey', 'yo', 'ayo'],
-    responseChance: 0.75, // Loves to respond
+    responseChance: 0.75,
     enabled: true,
   },
 };
@@ -110,57 +110,12 @@ const RESPONSE_TEMPLATES = {
     humor: ['That\'s a quality reference. I respect it. 🤓', 'I see what you did there... NERD! (said with love)'],
   },
   brainrot: {
-    greeting: [
-      'Yooo what\'s good, what\'s poppin\' 💀',
-      'Ayo who tf just summoned me lmao',
-      'no cap who called me out 😭',
-      'bruh what do you want fr fr 💯',
-      'ayo it\'s ya boy, what\'s twisted',
-      'yo yo yo, it\'s me, your favorite menace',
-    ],
-    acknowledgment: [
-      'no cap that\'s lowkey fire 🔥',
-      'fr fr that hit different bruh',
-      'bet bet i see you 💯',
-      'nah that\'s actually kinda fax',
-      'yo that\'s bussin bussin deadass',
-      'periodt, you spilled ✨',
-    ],
-    unsure: [
-      'bro i haven\'t got a clue what the fuck you\'re on about 💀',
-      'nah chief that question is giving unhinged energy',
-      'dawg that one broke my brain fr fr',
-      'that\'s some out of pocket shit ngl',
-      'bro idk i ain\'t paid enough for this',
-      'that question is just not it chief 😭',
-    ],
-    help: [
-      'yo i gotchu no cap, what\'s the tea ☕',
-      'bro i\'m lowkey the realest, ask away 💪',
-      'aight let\'s get this bread, what you need',
-      'fr fr i can help you not be so mid',
-      'ayo i\'ll assist, but no promises lmao',
-      'ok but first lemme warn you i might roast you while i help',
-    ],
-    humor: [
-      'nah that\'s actually hilarious i can\'t lie 💀💀',
-      'omg that broke me fr fr i\'m deceased 😭',
-      'yo that one just had me in a chokehold bruh',
-      'that\'s unhinged i fw it 🤣',
-      'ok that was peak comedy no cap',
-      'bro that shit had me shaking lmaooo',
-    ],
-    roast: [
-      'bro your vibe is NOT it 💀',
-      'nah you mid fr fr, skill issue tbh',
-      'that\'s giving desperate energy dawg',
-      'chief that ain\'t it, not even close',
-      'yo this is embarrassing for you fr',
-      'nah you down bad for real 😭',
-      'ok but that was cringe as fuck ngl',
-      'bro you fell off quick lmaoo',
-      'that energy is NOT serving, bestie 💋',
-    ],
+    greeting: [],
+    acknowledgment: [],
+    unsure: [],
+    help: [],
+    humor: [],
+    roast: [],
   },
 };
 
@@ -216,29 +171,19 @@ export async function setGuildPersonality(client, guildId, personalityKey) {
 
 /**
  * Check if the bot should respond to a message
- * Based on mentions and trigger patterns
  */
 export function shouldBotRespond(message, personality) {
-  if (!personality.enabled) {
-    return false;
-  }
+  if (!personality.enabled) return false;
 
-  // Always respond to direct mentions
-  if (message.mentions.has(message.client.user.id)) {
-    return true;
-  }
+  if (message.mentions.has(message.client.user.id)) return true;
 
-  // Check for trigger patterns
   const content = message.content.toLowerCase();
   const patterns = personality.triggerPatterns || [];
   
   for (const pattern of patterns) {
     if (content.includes(pattern.toLowerCase())) {
-      // Random chance based on responseChance
       const chance = personality.responseChance || 0.5;
-      if (Math.random() < chance) {
-        return true;
-      }
+      if (Math.random() < chance) return true;
     }
   }
 
@@ -252,24 +197,20 @@ export function generateResponse(context, personality) {
   const style = personality.responseStyle || 'neutral';
   const templates = RESPONSE_TEMPLATES[style] || RESPONSE_TEMPLATES.neutral;
 
-  // Special handling for brainrot - sometimes just roast for fun
-  if (style === 'brainrot' && Math.random() < 0.15) {
-    return getRandomResponse(templates.roast);
-  }
-
-  // Determine response type based on context
+  // Determine response type
   let responseType = 'acknowledgment';
-  
-  if (context.isGreeting) {
-    responseType = 'greeting';
-  } else if (context.isQuestion) {
-    responseType = 'unsure';
-  } else if (context.isHelpRequest) {
-    responseType = 'help';
-  } else if (context.isHumor) {
-    responseType = 'humor';
+
+  if (context.isGreeting) responseType = 'greeting';
+  else if (context.isQuestion) responseType = 'unsure';
+  else if (context.isHelpRequest) responseType = 'help';
+  else if (context.isHumor) responseType = 'humor';
+
+  // Claude’s custom brainrot generator
+  if (style === 'brainrot') {
+    return buildBrainrotResponse(responseType, context.channelId);
   }
 
+  // Default personalities
   const possibleResponses = templates[responseType] || templates.acknowledgment;
   return getRandomResponse(possibleResponses);
 }
@@ -304,4 +245,3 @@ export function getAvailablePersonalities() {
 export function getPersonalityDetails(personalityKey) {
   return PERSONALITY_PRESETS[personalityKey] || null;
 }
-
