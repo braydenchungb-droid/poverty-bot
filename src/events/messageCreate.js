@@ -22,8 +22,9 @@ import {
   generateResponse,
   detectContext,
 } from '../services/personality/personalityService.js';
+import { generateAIReply } from '../services/ai/aiChatService.js';
 
-const PERSONALITY_RESPONSE_COOLDOWN_MS = 5000;
+const PERSONALITY_RESPONSE_COOLDOWN_MS = 5000; // Don't respond too frequently
 
 export default {
   name: Events.MessageCreate,
@@ -40,6 +41,7 @@ export default {
 
       await handlePrefixCommand(message, client);
 
+      // Handle personality-based conversation responses
       await handlePersonalityResponse(message, client);
     } catch (error) {
       logger.error('Error in messageCreate event:', error);
@@ -49,21 +51,36 @@ export default {
 
 async function handlePersonalityResponse(message, client) {
   try {
+    // Get guild personality
     const personality = await getGuildPersonality(client, message.guild.id);
 
+    // Check if bot should respond
     if (!shouldBotRespond(message, personality)) {
       return;
     }
 
+    // Check cooldown to avoid response spam
     const cooldownKey = `personality-response:${message.guild.id}`;
     const canRespond = await checkRateLimit(cooldownKey, 1, PERSONALITY_RESPONSE_COOLDOWN_MS);
     if (!canRespond) {
       return;
     }
 
-    const context = detectContext(message.content);
+    // For the brainrot personality, try a real AI-generated reply first. If the
+    // API key isn't set, the call is rate-limited, or it fails for any reason,
+    // fall straight through to the existing canned response templates below so
+    // the bot never just goes silent.
+    let response = null;
+    if (personality.responseStyle === 'brainrot') {
+      response = await generateAIReply(client, message);
+    }
 
-    const response = generateResponse(context, personality);
+    if (!response) {
+      // Detect context from the message
+      const context = detectContext(message.content);
+      // Generate a personality-based response
+      response = generateResponse(context, personality);
+    }
 
     if (response) {
       await message.reply({
