@@ -26,7 +26,8 @@ export default {
               { name: 'Friendly', value: 'friendly' },
               { name: 'Sarcastic', value: 'sarcastic' },
               { name: 'Professional', value: 'professional' },
-              { name: 'Nerdy', value: 'nerdy' }
+              { name: 'Nerdy', value: 'nerdy' },
+              { name: 'Brainrot (Gen-Z 💀)', value: 'brainrot' }
             )
         )
     )
@@ -76,9 +77,18 @@ async function handleSetPersonality(interaction, client) {
     // Set the personality
     const personality = await setGuildPersonality(client, interaction.guildId, style);
 
+    let embedColor = '#00ff00';
+    let title = '✅ Personality Updated';
+
+    // Special color for brainrot
+    if (style === 'brainrot') {
+      embedColor = '#FF1493';
+      title = '💀 BRAINROT ACTIVATED 💀';
+    }
+
     const embed = new EmbedBuilder()
-      .setColor('#00ff00')
-      .setTitle('✅ Personality Updated')
+      .setColor(embedColor)
+      .setTitle(title)
       .setDescription(`The bot's personality has been set to **${personality.name}**`)
       .addFields(
         { name: 'Description', value: personality.description },
@@ -86,6 +96,12 @@ async function handleSetPersonality(interaction, client) {
         { name: 'Response Chance', value: `${(personality.responseChance * 100).toFixed(0)}%` }
       )
       .setFooter({ text: 'The bot will now respond with this personality in conversation.' });
+
+    if (style === 'brainrot') {
+      embed.addFields(
+        { name: '⚠️ Warning', value: 'This personality includes sarcasm, light roasting, and unfiltered Gen-Z energy. Server members may be roasted.' }
+      );
+    }
 
     await interaction.reply({
       embeds: [embed],
@@ -101,8 +117,13 @@ async function handleCurrentPersonality(interaction, client) {
   try {
     const personality = await getGuildPersonality(client, interaction.guildId);
 
+    let embedColor = '#0099ff';
+    if (personality.responseStyle === 'brainrot') {
+      embedColor = '#FF1493';
+    }
+
     const embed = new EmbedBuilder()
-      .setColor('#0099ff')
+      .setColor(embedColor)
       .setTitle('🤖 Current Personality')
       .setDescription(`The bot is currently using the **${personality.name}** personality.`)
       .addFields(
@@ -134,8 +155,21 @@ async function handleListPersonalities(interaction, client) {
       .setFooter({ text: 'Each personality has its own unique traits and response style.' });
 
     for (const personality of personalities) {
+      let emoji = '🤖';
+      if (personality.key === 'brainrot') {
+        emoji = '💀';
+      } else if (personality.key === 'friendly') {
+        emoji = '😊';
+      } else if (personality.key === 'sarcastic') {
+        emoji = '😏';
+      } else if (personality.key === 'professional') {
+        emoji = '💼';
+      } else if (personality.key === 'nerdy') {
+        emoji = '🤓';
+      }
+
       embed.addFields({
-        name: personality.name,
+        name: `${emoji} ${personality.name}`,
         value: `${personality.description}\n*Traits:* ${personality.traits.join(', ')}`,
         inline: false,
       });

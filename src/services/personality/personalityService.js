@@ -61,6 +61,15 @@ const PERSONALITY_PRESETS = {
     responseChance: 0.65,
     enabled: true,
   },
+  brainrot: {
+    name: 'Brainrot',
+    description: 'Gen-Z chaos energy, sarcastic, swears, roasts, pure unfiltered vibes',
+    traits: ['chaotic', 'brainrotted', 'sarcastic', 'ruthless', 'funny', 'unfiltered'],
+    responseStyle: 'brainrot',
+    triggerPatterns: ['@bot', 'bot', 'hey', 'yo', 'ayo'],
+    responseChance: 0.75, // Loves to respond
+    enabled: true,
+  },
 };
 
 const RESPONSE_TEMPLATES = {
@@ -98,6 +107,59 @@ const RESPONSE_TEMPLATES = {
     unsure: ['That query exceeds my current stack. 🤷', 'Unknown error 404 - but seriously idk lol'],
     help: ['Your quest is my quest! 🗡️', 'I have prepared my spellbook. How may I assist? ✨'],
     humor: ['That\'s a quality reference. I respect it. 🤓', 'I see what you did there... NERD! (said with love)'],
+  },
+  brainrot: {
+    greeting: [
+      'Yooo what\'s good, what\'s poppin\' 💀',
+      'Ayo who tf just summoned me lmao',
+      'no cap who called me out 😭',
+      'bruh what do you want fr fr 💯',
+      'ayo it\'s ya boy, what\'s twisted',
+      'yo yo yo, it\'s me, your favorite menace',
+    ],
+    acknowledgment: [
+      'no cap that\'s lowkey fire 🔥',
+      'fr fr that hit different bruh',
+      'bet bet i see you 💯',
+      'nah that\'s actually kinda fax',
+      'yo that\'s bussin bussin deadass',
+      'periodt, you spilled ✨',
+    ],
+    unsure: [
+      'bro i haven\'t got a clue what the fuck you\'re on about 💀',
+      'nah chief that question is giving unhinged energy',
+      'dawg that one broke my brain fr fr',
+      'that\'s some out of pocket shit ngl',
+      'bro idk i ain\'t paid enough for this',
+      'that question is just not it chief 😭',
+    ],
+    help: [
+      'yo i gotchu no cap, what\'s the tea ☕',
+      'bro i\'m lowkey the realest, ask away 💪',
+      'aight let\'s get this bread, what you need',
+      'fr fr i can help you not be so mid',
+      'ayo i\'ll assist, but no promises lmao',
+      'ok but first lemme warn you i might roast you while i help',
+    ],
+    humor: [
+      'nah that\'s actually hilarious i can\'t lie 💀💀',
+      'omg that broke me fr fr i\'m deceased 😭',
+      'yo that one just had me in a chokehold bruh',
+      'that\'s unhinged i fw it 🤣',
+      'ok that was peak comedy no cap',
+      'bro that shit had me shaking lmaooo',
+    ],
+    roast: [
+      'bro your vibe is NOT it 💀',
+      'nah you mid fr fr, skill issue tbh',
+      'that\'s giving desperate energy dawg',
+      'chief that ain\'t it, not even close',
+      'yo this is embarrassing for you fr',
+      'nah you down bad for real 😭',
+      'ok but that was cringe as fuck ngl',
+      'bro you fell off quick lmaoo',
+      'that energy is NOT serving, bestie 💋',
+    ],
   },
 };
 
@@ -191,6 +253,11 @@ export function generateResponse(context, personality) {
   const style = personality.responseStyle || 'neutral';
   const templates = RESPONSE_TEMPLATES[style] || RESPONSE_TEMPLATES.neutral;
 
+  // Special handling for brainrot - sometimes just roast for fun
+  if (style === 'brainrot' && Math.random() < 0.15) {
+    return getRandomResponse(templates.roast);
+  }
+
   // Determine response type based on context
   let responseType = 'acknowledgment';
   
@@ -215,7 +282,7 @@ export function detectContext(content) {
   const lowerContent = content.toLowerCase().trim();
 
   return {
-    isGreeting: /^(hi|hello|hey|yo|sup|howdy|greetings)/.test(lowerContent),
+    isGreeting: /^(hi|hello|hey|yo|sup|howdy|greetings|ayo)/.test(lowerContent),
     isQuestion: lowerContent.endsWith('?'),
     isHelpRequest: /help|assist|can you|could you|would you|please/.test(lowerContent),
     isHumor: /lol|lmao|haha|hehe|;-?\)|XD|😂|😆/.test(content),
